@@ -1,9 +1,5 @@
 version: '2.1'
 
-networks:
-  monitor-net:
-    driver: bridge
-
 volumes:
     prometheus_data: {}
     grafana_data: {}
@@ -24,10 +20,9 @@ services:
       - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
     restart: unless-stopped
-    expose:
-      - 9090
-    networks:
-      - monitor-net
+    ports:
+      - 9090:9090
+    network_mode: "host"
     labels:
       org.label-schema.group: "monitoring"
 
@@ -40,10 +35,9 @@ services:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
     restart: unless-stopped
-    expose:
-      - 9093
-    networks:
-      - monitor-net
+    ports:
+      - 9093:9093
+    network_mode: "host"
     labels:
       org.label-schema.group: "monitoring"
 
@@ -60,10 +54,9 @@ services:
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
     restart: unless-stopped
-    expose:
-      - 9100
-    networks:
-      - monitor-net
+    ports:
+      - 9100:9100
+    network_mode: "host"
     labels:
       org.label-schema.group: "monitoring"
 
@@ -77,10 +70,9 @@ services:
       - /var/lib/docker:/var/lib/docker:ro
       #- /cgroup:/cgroup:ro #doesn't work on MacOS only for Linux
     restart: unless-stopped
-    expose:
-      - 8080
-    networks:
-      - monitor-net
+    ports:
+      - 8080:8080
+    network_mode: "host"
     labels:
       org.label-schema.group: "monitoring"
 
@@ -95,10 +87,9 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
     restart: unless-stopped
-    expose:
-      - 3000
-    networks:
-      - monitor-net
+    ports:
+      - 3000:3000
+    network_mode: "host"
     labels:
       org.label-schema.group: "monitoring"
 
@@ -106,28 +97,20 @@ services:
     image: prom/pushgateway:v1.2.0
     container_name: pushgateway
     restart: unless-stopped
-    expose:
-      - 9091
-    networks:
-      - monitor-net
+    ports:
+      - 9091:9091
+    network_mode: "host"
     labels:
       org.label-schema.group: "monitoring"
 
   caddy:
     image: stefanprodan/caddy
     container_name: caddy
-    ports:
-      - "3000:3000"
-      - "9090:9090"
-      - "9093:9093"
-      - "9091:9091"
     volumes:
       - ./caddy:/etc/caddy
     environment:
       - ADMIN_USER=${ADMIN_USER:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
     restart: unless-stopped
-    networks:
-      - monitor-net
     labels:
       org.label-schema.group: "monitoring"
